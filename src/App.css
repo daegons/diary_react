@@ -18,6 +18,9 @@ textarea {
   margin-bottom: 20px;
 }
 
+.DiaryMaker select:hover {
+  cursor: pointer;
+}
 .DiaryMaker button {
   width: 70px;
   height: 70px;
@@ -53,4 +56,13 @@ textarea {
 .DiaryItem .content {
   font-weight: bold;
   margin: 30px 0px;
+}
+button {
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  margin: 5px;
+}
+button:hover {
+  cursor: pointer;
 }
