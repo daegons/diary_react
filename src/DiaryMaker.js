@@ -1,13 +1,18 @@
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from "react";
+import { useContext } from "react";
+import { useEffect } from "react";
+import { DiaryDispatchContext } from "./App";
 
-const DiaryMaker = ({ onCreate }) => {
+const DiaryMaker = () => {
+  const { onCreate } = useContext(DiaryDispatchContext);
+
   const authorInput = useRef(); //돔요소
   const contentInput = useRef();
 
   const [state, setState] = useState({
     //초기값 공백//작성 안해서
-    author: '',
-    content: '',
+    author: "",
+    content: "",
     emotion: 1,
   });
 
@@ -24,16 +29,16 @@ const DiaryMaker = ({ onCreate }) => {
       return;
     }
     if (state.content.length < 10) {
-      alert('주의! 본문 10글자 이상 작성해주세요😊');
+      alert("주의! 본문 10글자 이상 작성해주세요😊");
       contentInput.current.focus(); //자동 포커스
       return;
     }
     onCreate(state.author, state.content, state.emotion);
-    alert('SAVE SUCCESS');
+    alert("SAVE SUCCESS");
     setState({
       //일기 작성후 글자 초기화
-      author: '',
-      content: '',
+      author: "",
+      content: "",
       emotion: 1,
     });
   };
@@ -77,4 +82,4 @@ const DiaryMaker = ({ onCreate }) => {
   );
 };
 
-export default DiaryMaker;
+export default React.memo(DiaryMaker); //React.memo최적화

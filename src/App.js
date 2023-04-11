@@ -1,18 +1,52 @@
-import { useEffect, useMemo, useRef } from 'react';
-import { useState } from 'react';
-import './App.css';
-import DiaryList from './DiaryList';
-import DiaryMaker from './DiaryMaker';
-import OptimizeTest from './OptimizeTest';
+import React, {
+  useReducer,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
+
+import "./App.css";
+import DiaryList from "./DiaryList";
+import DiaryMaker from "./DiaryMaker";
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "INIT": {
+      return action.data;
+    }
+    case "CREATE": {
+      const created_date = new Date().getTime();
+      const newItem = {
+        ...action.data,
+        created_date,
+      };
+      return [newItem, ...state];
+    }
+    case "REMOVE": {
+      return state.filter((it) => it.id !== action.targetId);
+    }
+    case "EDIT": {
+      return state.map((it) =>
+        it.id === action.targetId ? { ...it, content: action.newContent } : it
+      );
+    }
+    default:
+      return state;
+  }
+};
+
+export const DiaryStateContext = React.createContext();
+
+export const DiaryDispatchContext = React.createContext();
 
 function App() {
-  const [data, setData] = useState([]);
-
+  const [data, dispatch] = useReducer(reducer, []);
   const dataId = useRef(0);
 
   const getData = async () => {
     const res = await fetch(
-      'https://jsonplaceholder.typicode.com/comments'
+      "https://jsonplaceholder.typicode.com/comments"
     ).then((res) => res.json());
 
     const initData = res.slice(0, 20).map((it) => {
@@ -24,38 +58,36 @@ function App() {
         id: dataId.current++,
       };
     });
-    setData(initData);
+    dispatch({ type: "INIT", data: initData });
   };
 
   useEffect(() => {
     getData();
   }, []);
 
-  const onCreate = (author, content, emotion) => {
-    const created_date = new Date().getTime();
-    const newItem = {
-      author,
-      content,
-      emotion,
-      created_date,
-      id: dataId.current,
-    };
-    dataId.current += 1;
-    setData([newItem, ...data]);
-  };
+  const onCreate = useCallback(
+    (author, content, emotion) => {
+      dispatch({
+        type: "CREATE",
+        data: { author, content, emotion, id: dataId.current },
+      });
 
-  const onRemove = (targetId) => {
-    const newDiaryList = data.filter((it) => it.id !== targetId);
-    setData(newDiaryList);
-  };
+      dataId.current += 1;
+    },
+    [] //값 변경되면 위에 onCreate함수 재실행
+  );
 
-  const onEdit = (targetId, newContent) => {
-    setData(
-      data.map((it) =>
-        it.id === targetId ? { ...it, content: newContent } : it
-      )
-    );
-  };
+  const onRemove = useCallback((targetId) => {
+    dispatch({ type: "REMOVE", targetId });
+  }, []);
+
+  const onEdit = useCallback((targetId, newContent) => {
+    dispatch({ type: "EDIT", targetId, newContent });
+  }, []);
+
+  const memoizedDispatches = useMemo(() => {
+    return { onCreate, onRemove, onEdit };
+  }, []);
 
   const getDiaryAnalysis = useMemo(() => {
     const goodCount = data.filter((it) => it.emotion >= 3).length;
@@ -65,15 +97,19 @@ function App() {
   }, [data.length]); //데이터(일기의) 숫자가 늘어날때만 위에 코드 재실행(최적화)
   const { goodCount, badCount, goodRatio } = getDiaryAnalysis;
   return (
-    <div className="App">
-      <OptimizeTest />
-      <DiaryMaker onCreate={onCreate} />
-      <div>전체일기 : {data.length}</div>
-      <div>기분 좋은 일기 개수 : {goodCount}</div>
-      <div>기분 나쁠 일기 개수 : {badCount}</div>
-      <div>기분 좋은 일기 비율 : {goodRatio}</div>
-      <DiaryList onEdit={onEdit} onRemove={onRemove} dryList={data} />
-    </div>
+    <DiaryStateContext.Provider value={data}>
+      <DiaryDispatchContext.Provider value={memoizedDispatches}>
+        <div className="App">
+          {/* <OptimizeTest /> */}
+          <DiaryMaker />
+          <div>전체일기 : {data.length}</div>
+          <div>기분 좋은 일기 개수 : {goodCount}</div>
+          <div>기분 나쁠 일기 개수 : {badCount}</div>
+          <div>기분 좋은 일기 비율 : {goodRatio}</div>
+          <DiaryList />
+        </div>
+      </DiaryDispatchContext.Provider>
+    </DiaryStateContext.Provider>
   );
 }
 

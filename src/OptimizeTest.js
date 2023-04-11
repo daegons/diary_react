@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 const CounterA = React.memo(({ count }) => {
   useEffect(() => {
@@ -13,7 +13,13 @@ const CounterB = ({ obj }) => {
   });
   return <div>{obj.count}</div>;
 };
-
+const areEqual = (preProps, nextProps) => {
+  if (preProps.obj.count === nextProps.obj.count) {
+    return true;
+  }
+  return false;
+};
+const MemoizedCounterB = React.memo(CounterB, areEqual);
 const OptimizeTest = () => {
   const [count, setCount] = useState(1);
   const [obj, setObj] = useState({
