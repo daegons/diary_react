@@ -1,32 +1,32 @@
-import React, { useReducer } from "react";
+import React, { useReducer } from 'react';
 
-import "./App.css";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import './App.css';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-import Home from "./pages/Home";
-import New from "./pages/New";
-import Edit from "./pages/Edit";
-import Diary from "./pages/Diary";
-import { useRef } from "react";
+import Home from './pages/Home';
+import New from './pages/New';
+import Edit from './pages/Edit';
+import Diary from './pages/Diary';
+import { useRef } from 'react';
 
 const reducer = (state, action) => {
   let newState = [];
   switch (action.type) {
-    case "INIT": {
+    case 'INIT': {
       return action.data;
     }
-    case "CREATE": {
+    case 'CREATE': {
       const newItem = {
         ...action.data,
       };
       newState = [newItem, ...state];
       break;
     }
-    case "REMOVE": {
+    case 'REMOVE': {
       newState = state.filter((it) => it.id !== action.targetId);
       break;
     }
-    case "EDIT": {
+    case 'EDIT': {
       newState = state.map((it) =>
         it.id === action.data.id ? { ...action.data } : it
       );
@@ -45,43 +45,42 @@ const dummyData = [
   {
     id: 1,
     emotion: 1,
-    content: "오늘 일기 1번",
+    content: '오늘 일기 1번',
     date: 1681275312238,
   },
   {
     id: 2,
     emotion: 2,
-    content: "오늘 일기 2번",
+    content: '오늘 일기 2번',
     date: 1681275312239,
   },
   {
     id: 3,
     emotion: 3,
-    content: "오늘 일기 3번",
+    content: '오늘 일기 3번',
     date: 1681275312240,
   },
   {
     id: 4,
     emotion: 4,
-    content: "오늘 일기 4번",
+    content: '오늘 일기 4번',
     date: 1681275312241,
   },
   {
     id: 5,
     emotion: 5,
-    content: "오늘 일기 5번",
+    content: '오늘 일기 5번',
     date: 1681275312242,
   },
 ];
 
 function App() {
   const [data, dispatch] = useReducer(reducer, dummyData);
-  console.log(new Date().getTime());
-  const dataId = useRef(0);
+  const dataId = useRef(6);
   // CREATE
   const onCreate = (date, content, emotion) => {
     dispatch({
-      type: "CREATE",
+      type: 'CREATE',
       data: {
         id: dataId.current,
         date: new Date(date).getTime(),
@@ -93,12 +92,12 @@ function App() {
   };
   // REMOVE
   const onRemove = (targetId) => {
-    dispatch({ type: "REMOVE", targetId });
+    dispatch({ type: 'REMOVE', targetId });
   };
   // EDIT
   const onEdit = (targetId, date, content, emotion) => {
     dispatch({
-      type: "EDIT",
+      type: 'EDIT',
       data: {
         id: targetId,
         date: new Date(date).getTime(),
@@ -121,7 +120,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/new" element={<New />} />
-              <Route path="/edit" element={<Edit />} />
+              <Route path="/edit/:id" element={<Edit />} />
               <Route path="/diary/:id" element={<Diary />} />
             </Routes>
           </div>

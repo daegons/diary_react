@@ -1,10 +1,10 @@
-import { useContext, useState } from "react";
+import { useContext, useState } from 'react';
 
-import MyHeader from "./../components/MyHeader";
-import MyButton from "./../components/MyButton";
-import DiaryList from "./../components/DiaryList";
-import { DiaryStateContext } from "../App";
-import { useEffect } from "react";
+import MyHeader from './../components/MyHeader';
+import MyButton from './../components/MyButton';
+import DiaryList from './../components/DiaryList';
+import { DiaryStateContext } from '../App';
+import { useEffect } from 'react';
 
 const Home = () => {
   const diaryList = useContext(DiaryStateContext);
@@ -24,7 +24,10 @@ const Home = () => {
       const lastDay = new Date(
         curDate.getFullYear(),
         curDate.getMonth() + 1,
-        0
+        0,
+        23,
+        59,
+        59
       ).getTime();
 
       setData(
@@ -33,9 +36,7 @@ const Home = () => {
     }
   }, [diaryList, curDate]);
 
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
+  useEffect(() => {}, [data]);
 
   const increaseMonth = () => {
     setCurDate(
@@ -52,8 +53,8 @@ const Home = () => {
     <div>
       <MyHeader
         headText={headText}
-        leftChild={<MyButton text={"<"} onClick={decreaseMonth} />}
-        rightChild={<MyButton text={">"} onClick={increaseMonth} />}
+        leftChild={<MyButton text={'<'} onClick={decreaseMonth} />}
+        rightChild={<MyButton text={'>'} onClick={increaseMonth} />}
       />
       <DiaryList diaryList={data} />
     </div>
