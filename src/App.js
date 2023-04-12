@@ -1,113 +1,131 @@
-import React, {
-  useReducer,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useReducer } from "react";
 
 import "./App.css";
-import DiaryList from "./DiaryList";
-import DiaryMaker from "./DiaryMaker";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+
+import Home from "./pages/Home";
+import New from "./pages/New";
+import Edit from "./pages/Edit";
+import Diary from "./pages/Diary";
+import { useRef } from "react";
 
 const reducer = (state, action) => {
+  let newState = [];
   switch (action.type) {
     case "INIT": {
       return action.data;
     }
     case "CREATE": {
-      const created_date = new Date().getTime();
       const newItem = {
         ...action.data,
-        created_date,
       };
-      return [newItem, ...state];
+      newState = [newItem, ...state];
+      break;
     }
     case "REMOVE": {
-      return state.filter((it) => it.id !== action.targetId);
+      newState = state.filter((it) => it.id !== action.targetId);
+      break;
     }
     case "EDIT": {
-      return state.map((it) =>
-        it.id === action.targetId ? { ...it, content: action.newContent } : it
+      newState = state.map((it) =>
+        it.id === action.data.id ? { ...action.data } : it
       );
+      break;
     }
     default:
       return state;
   }
+  return newState;
 };
 
 export const DiaryStateContext = React.createContext();
-
 export const DiaryDispatchContext = React.createContext();
 
+const dummyData = [
+  {
+    id: 1,
+    emotion: 1,
+    content: "오늘 일기 1번",
+    date: 1681275312238,
+  },
+  {
+    id: 2,
+    emotion: 2,
+    content: "오늘 일기 2번",
+    date: 1681275312239,
+  },
+  {
+    id: 3,
+    emotion: 3,
+    content: "오늘 일기 3번",
+    date: 1681275312240,
+  },
+  {
+    id: 4,
+    emotion: 4,
+    content: "오늘 일기 4번",
+    date: 1681275312241,
+  },
+  {
+    id: 5,
+    emotion: 5,
+    content: "오늘 일기 5번",
+    date: 1681275312242,
+  },
+];
+
 function App() {
-  const [data, dispatch] = useReducer(reducer, []);
+  const [data, dispatch] = useReducer(reducer, dummyData);
+  console.log(new Date().getTime());
   const dataId = useRef(0);
-
-  const getData = async () => {
-    const res = await fetch(
-      "https://jsonplaceholder.typicode.com/comments"
-    ).then((res) => res.json());
-
-    const initData = res.slice(0, 20).map((it) => {
-      return {
-        author: it.email,
-        content: it.body,
-        emotion: Math.floor(Math.random() * 5) + 1,
-        created_date: new Date().getTime(),
-        id: dataId.current++,
-      };
+  // CREATE
+  const onCreate = (date, content, emotion) => {
+    dispatch({
+      type: "CREATE",
+      data: {
+        id: dataId.current,
+        date: new Date(date).getTime(),
+        content,
+        emotion,
+      },
     });
-    dispatch({ type: "INIT", data: initData });
+    dataId.current += 1;
   };
-
-  useEffect(() => {
-    getData();
-  }, []);
-
-  const onCreate = useCallback(
-    (author, content, emotion) => {
-      dispatch({
-        type: "CREATE",
-        data: { author, content, emotion, id: dataId.current },
-      });
-
-      dataId.current += 1;
-    },
-    [] //값 변경되면 위에 onCreate함수 재실행
-  );
-
-  const onRemove = useCallback((targetId) => {
+  // REMOVE
+  const onRemove = (targetId) => {
     dispatch({ type: "REMOVE", targetId });
-  }, []);
-
-  const onEdit = useCallback((targetId, newContent) => {
-    dispatch({ type: "EDIT", targetId, newContent });
-  }, []);
-
-  const memoizedDispatches = useMemo(() => {
-    return { onCreate, onRemove, onEdit };
-  }, []);
-
-  const getDiaryAnalysis = useMemo(() => {
-    const goodCount = data.filter((it) => it.emotion >= 3).length;
-    const badCount = data.length - goodCount;
-    const goodRatio = (goodCount / data.length) * 100;
-    return { goodCount, badCount, goodRatio };
-  }, [data.length]); //데이터(일기의) 숫자가 늘어날때만 위에 코드 재실행(최적화)
-  const { goodCount, badCount, goodRatio } = getDiaryAnalysis;
+  };
+  // EDIT
+  const onEdit = (targetId, date, content, emotion) => {
+    dispatch({
+      type: "EDIT",
+      data: {
+        id: targetId,
+        date: new Date(date).getTime(),
+        content,
+        emotion,
+      },
+    });
+  };
   return (
     <DiaryStateContext.Provider value={data}>
-      <DiaryDispatchContext.Provider value={memoizedDispatches}>
-        <div className="App">
-          {/* <OptimizeTest /> */}
-          <DiaryMaker />
-          <div>전체일기 : {data.length}</div>
-          <div>기분 좋은 일기 개수 : {goodCount}</div>
-          <div>기분 나쁠 일기 개수 : {badCount}</div>
-          <div>기분 좋은 일기 비율 : {goodRatio}</div>
-          <DiaryList />
-        </div>
+      <DiaryDispatchContext.Provider
+        value={{
+          onCreate,
+          onEdit,
+          onRemove,
+        }}
+      >
+        <BrowserRouter>
+          <div className="App">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/new" element={<New />} />
+              <Route path="/edit" element={<Edit />} />
+              <Route path="/diary/:id" element={<Diary />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
       </DiaryDispatchContext.Provider>
     </DiaryStateContext.Provider>
   );
